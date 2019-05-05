@@ -1,21 +1,22 @@
 #include <stdbool.h>
 #include <stdlib.h>
+#include <stdio.h>
 #include <string.h>
 #include <mouse.h>
 #include <tgi.h>
 
-#define COLOR_BACK TGI_COLOR_BLACK
-#define COLOR_FORE TGI_COLOR_WHITE
 #define PADDLE_WIDTH 30
 #define PADDLE_HALF_WIDTH 15
 #define PADDLE_HEIGHT 2
 
-static unsigned char maxY, paddleYTop, paddleYBottom, error;
-static unsigned char x = -1;
-static struct mouse_info info;
-static struct mouse_box full_box;
+#define max(a,b)  (((a) > (b)) ? (a) : (b))
+#define min(a,b)  (((a) < (b)) ? (a) : (b))
 
-void init (void)
+static unsigned int max_x, max_y, paddle_y_top, paddle_y_bottom, error;
+static unsigned int x, new_x = -1;
+static struct mouse_info info;
+
+void init_drivers(void)
 {
   error = mouse_install(&mouse_def_callbacks, mouse_static_stddrv);
   if(error != MOUSE_ERR_OK) {
@@ -34,35 +35,45 @@ void init (void)
   tgi_clear();
 }
 
-void drawPaddle(void)
+
+void draw_paddle(void)
 {
-  if(info.pos.x == x) {
+  new_x = min(max(info.pos.x, PADDLE_HALF_WIDTH), max_x-PADDLE_HALF_WIDTH);
+
+  if(new_x == x) {
     return;
   }
 
-  tgi_setcolor(COLOR_BLACK);
-  if(info.pos.x > x) {
-    tgi_bar(x-PADDLE_HALF_WIDTH,paddleYTop,info.pos.x-PADDLE_HALF_WIDTH,paddleYBottom);
-  } else if(info.pos.x < x) {
-    tgi_bar(info.pos.x+PADDLE_HALF_WIDTH,paddleYTop,x+PADDLE_HALF_WIDTH,paddleYBottom);
+  tgi_setcolor(TGI_COLOR_BLACK);
+  if(new_x > x) {
+    tgi_bar(x-PADDLE_HALF_WIDTH,paddle_y_top,new_x-PADDLE_HALF_WIDTH,paddle_y_bottom);
+  } else if(new_x < x) {
+    tgi_bar(new_x+PADDLE_HALF_WIDTH,paddle_y_top,x+PADDLE_HALF_WIDTH,paddle_y_bottom);
   }
-  tgi_setcolor(COLOR_FORE);
-  tgi_bar(info.pos.x-PADDLE_HALF_WIDTH,paddleYTop,info.pos.x+PADDLE_HALF_WIDTH,paddleYBottom);
-  x=info.pos.x;
+
+  tgi_setcolor(TGI_COLOR_WHITE);
+  tgi_bar(new_x-PADDLE_HALF_WIDTH,paddle_y_top,new_x+PADDLE_HALF_WIDTH,paddle_y_bottom);
+  x=new_x;
+}
+
+void update(void) {
+  mouse_info(&info);
+  draw_paddle();
 }
 
 int main (void)
 {
-  init();
-  maxY = tgi_getmaxy();
-  paddleYBottom = maxY - 10;
-  paddleYTop = paddleYBottom - PADDLE_HEIGHT;
+  init_drivers();
 
-  mouse_getbox(&full_box);
+  tgi_clear(); // load-bearing! getxres returns wrong result (24) until we do this
+  max_y = tgi_getyres();
+  max_x = tgi_getxres();
+  paddle_y_bottom = max_y - 10;
+  paddle_y_top = paddle_y_bottom - PADDLE_HEIGHT;
 
   do {
-    mouse_info(&info);
-    drawPaddle();
+    update();
   } while(true);
+
   return 0;
 }
