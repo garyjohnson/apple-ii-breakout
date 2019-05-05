@@ -10,15 +10,13 @@
 #define PADDLE_HALF_WIDTH 15
 #define PADDLE_HEIGHT 2
 
-static unsigned maxY;
-static unsigned int paddleYTop, paddleYBottom;
-static unsigned int x = -1;
+static unsigned char maxY, paddleYTop, paddleYBottom, error;
+static unsigned char x = -1;
+static struct mouse_info info;
+static struct mouse_box full_box;
 
-int main (void)
+void init (void)
 {
-  struct mouse_info info;
-  struct mouse_box full_box;
-  unsigned char error;
   error = mouse_install(&mouse_def_callbacks, mouse_static_stddrv);
   if(error != MOUSE_ERR_OK) {
     exit(EXIT_FAILURE);
@@ -34,7 +32,28 @@ int main (void)
     exit(EXIT_FAILURE);
   }
   tgi_clear();
+}
 
+void drawPaddle(void)
+{
+  if(info.pos.x == x) {
+    return;
+  }
+
+  tgi_setcolor(COLOR_BLACK);
+  if(info.pos.x > x) {
+    tgi_bar(x-PADDLE_HALF_WIDTH,paddleYTop,info.pos.x-PADDLE_HALF_WIDTH,paddleYBottom);
+  } else if(info.pos.x < x) {
+    tgi_bar(info.pos.x+PADDLE_HALF_WIDTH,paddleYTop,x+PADDLE_HALF_WIDTH,paddleYBottom);
+  }
+  tgi_setcolor(COLOR_FORE);
+  tgi_bar(info.pos.x-PADDLE_HALF_WIDTH,paddleYTop,info.pos.x+PADDLE_HALF_WIDTH,paddleYBottom);
+  x=info.pos.x;
+}
+
+int main (void)
+{
+  init();
   maxY = tgi_getmaxy();
   paddleYBottom = maxY - 10;
   paddleYTop = paddleYBottom - PADDLE_HEIGHT;
@@ -43,19 +62,7 @@ int main (void)
 
   do {
     mouse_info(&info);
-
-    if(info.pos.x == x) {
-      continue;
-    }
-
-    tgi_setcolor(COLOR_BLACK);
-    if(info.pos.x > x) {
-      tgi_bar(x-PADDLE_HALF_WIDTH,paddleYTop,info.pos.x-PADDLE_HALF_WIDTH,paddleYBottom);
-    } else if(info.pos.x < x) {
-      tgi_bar(info.pos.x+PADDLE_HALF_WIDTH,paddleYTop,x+PADDLE_HALF_WIDTH,paddleYBottom);
-    }
-    tgi_setcolor(COLOR_FORE);
-    tgi_bar(info.pos.x-PADDLE_HALF_WIDTH,paddleYTop,info.pos.x+PADDLE_HALF_WIDTH,paddleYBottom);
-    x=info.pos.x;
+    drawPaddle();
   } while(true);
+  return 0;
 }
