@@ -82,7 +82,22 @@ void draw_ball(void)
     ball_vx = -ball_vx;
   }
 
-  if(ball_new_y <= 0 || ball_new_y >= max_y) {
+  if(ball_new_y <= 0) {
+    ball_vy = -ball_vy;
+  }
+  
+  if(ball_new_y >= max_y) {
+    ball_new_x = max_x/2;
+    ball_new_y = max_y/2;
+    ball_vx = -1;
+    ball_vy = -1;
+  }
+
+  if(ball_new_y >= paddle_y_top && 
+      ball_new_y <= paddle_y_bottom && 
+      ball_new_x+2 >= paddle_x-PADDLE_HALF_WIDTH &&
+      ball_new_x+2 <= paddle_x+PADDLE_HALF_WIDTH)
+  {
     ball_vy = -ball_vy;
   }
 
