@@ -7,6 +7,8 @@
 ### In order to override defaults - values can be assigned to the variables ###
 ###############################################################################
 
+AC := AppleCommander-ac-1.6.0.jar
+
 # Space or comma separated list of cc65 supported target platforms to build for.
 # Default: c64 (lowercase!)
 TARGETS := apple2enh
